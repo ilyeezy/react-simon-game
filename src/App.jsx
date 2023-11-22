@@ -32,6 +32,7 @@ function App() {
   const [toggle, setToggle] = useState(false);
   const [statusPlaySubsequence, setStatusPlaySubsequence] = useState(false);
   const [acitveIndex, setActiveIndex] = useState(null);
+  const [freeBoard, setFreeBoard] = useState(false);
   const [time, setTime] = useState(0);
   function startGame() {
     if (subsequenceGame.length > 0) {
@@ -43,10 +44,11 @@ function App() {
     setRound(1);
     generateSubsequence();
   }
-  console.log("userArr", subsequenceUser);
-  console.log("gameArr", subsequenceGame);
+
   useEffect(() => {
-    setTimeout(() => playSubsequence(), 1000);
+    if (statusGame) {
+      setTimeout(() => playSubsequence(), 1000);
+    }
   }, [round, statusGame, toggle]);
 
   const generateSubsequence = () => {
@@ -55,10 +57,10 @@ function App() {
   };
 
   async function playSubsequence() {
-    setStatusPlaySubsequence(true);
     if (fail === true) {
       return;
     }
+
     for (let i = 0; i < subsequenceGame.length; i++) {
       const el = subsequenceGame[i];
       const audio = items[el].sound;
@@ -68,13 +70,14 @@ function App() {
     setStatusPlaySubsequence(false);
   }
   function autoPlay(sound, i) {
+    setStatusPlaySubsequence(true);
     setActiveIndex(i);
     const audio = new Audio(sound);
     audio.play().then(() => setTimeout(() => setActiveIndex(null), 300));
   }
 
   const onMouseDown = (sound, i) => {
-    if (statusPlaySubsequence && fail) {
+    if (statusPlaySubsequence || fail) {
       return;
     } else if (!statusPlaySubsequence && statusGame) {
       setSubsequenceUser([...subsequenceUser, i]);
@@ -86,7 +89,7 @@ function App() {
   };
 
   const onMouseUp = () => {
-    if (statusPlaySubsequence && fail) {
+    if (statusPlaySubsequence || fail) {
       return;
     }
     const isRoundComplete = subsequenceUser.every(
@@ -108,7 +111,24 @@ function App() {
       setRound((prev) => prev + 1);
     }
   };
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const delay = (ms) =>
+    new Promise((resolve, reject) =>
+      setTimeout(() => {
+        resolve();
+      }, ms),
+    );
+
+  function selectFreeBoard() {
+    setFreeBoard(true);
+    setTime(0);
+    setRound(0);
+    setStatusGame(false);
+    setFail(false);
+    if (subsequenceGame.length > 0 || subsequenceUser.length > 0) {
+      setSubsequenceUser([]);
+      setSubsequenceGame([]);
+    }
+  }
 
   return (
     <div className="wrapper">
@@ -133,7 +153,12 @@ function App() {
           <div className="simonGame__settings">
             <div className="simonGame__settings-top">
               <h2>Round: {round}</h2>
-              <button disabled={time === 0 ? true : false} onClick={startGame}>
+              <button
+                disabled={
+                  time === 0 || statusPlaySubsequence === true ? true : false
+                }
+                onClick={startGame}
+              >
                 Start
               </button>
               {fail && <p> Вы проиграли после {round} раунда</p>}
@@ -144,31 +169,45 @@ function App() {
               <label htmlFor="easy">
                 <p>Easy</p>
                 <input
+                  disabled={statusPlaySubsequence === true ? true : false}
                   value={time}
                   onChange={() => setTime(1500)}
                   type="radio"
-                  name="time"
+                  name="Сложность"
                   id="easy"
                 />
               </label>
               <label htmlFor="Normal">
                 <p>Normal</p>
                 <input
+                  disabled={statusPlaySubsequence === true ? true : false}
                   value={time}
                   onChange={() => setTime(1000)}
                   type="radio"
-                  name="time"
+                  name="Сложность"
                   id="Normal"
                 />
               </label>
               <label htmlFor="Hard">
                 <p>Hard</p>
                 <input
+                  disabled={statusPlaySubsequence === true ? true : false}
                   value={time}
                   onChange={() => setTime(400)}
                   type="radio"
-                  name="time"
+                  name="Сложность"
                   id="Hard"
+                />
+              </label>
+              <label htmlFor="free">
+                <p>free board</p>
+                <input
+                  disabled={statusPlaySubsequence === true ? true : false}
+                  value={freeBoard}
+                  onChange={selectFreeBoard}
+                  type="radio"
+                  name="Сложность"
+                  id="free"
                 />
               </label>
             </div>
